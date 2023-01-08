@@ -7,16 +7,15 @@ import uuid
 import urllib
 
 from flask import Flask , make_response, render_template  , request , send_file
-from pycaret.classification import * 
+
 
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model = load_model( 'model')
+loaded_model = pickle.load(open('finalized_model.sav', 'rb'))
 
 def predict(variables):
-
-    predictions = predict_model(model, data=pd.DataFrame([variables], columns=['stop_time', 'driver_age', 'driver_gender',  'driver_race', 'violation', 'search_conducted', 'drugs_related_stop']))
+    predictions = loaded_model.predict([variables])
     return predictions
 
 def map_driver_race(race):
@@ -62,12 +61,14 @@ def home():
     elif request.method == 'POST':
 
         if request.form.get('x1') is not None and request.form.get('x2') is not None and request.form.get('x3') is not None and request.form.get('x4') is not None and request.form.get('x5') is not None and request.form.get('x6') is not None and request.form.get('x7') is not None: 
+            if not request.form.get('x1') and not request.form.get('x2'):
+                return render_template("index.html")
+
             variables = [time_to_int(request.form.get('x1')), int(request.form.get('x2')), request.form.get('x3'), request.form.get('x4'), request.form.get('x5'),request.form.get('x6'),request.form.get('x7')]
             
             predictions = predict(variables)
 
-            pred = [predictions.loc['prediction_label'], predictions.loc['prediction_score']]
-            
+            pred = "You will be arrested" if predictions[0]==1 else "You won't be arrested"
             result = {'y' : pred}
 
             response = make_response( render_template("index.html", **result), 203)

@@ -1,0 +1,7 @@
+**/env
+**/data
+**/.ipynb*
+*.log
+*.pkl
+*.sav
+*.__*
